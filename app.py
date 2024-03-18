@@ -13,166 +13,186 @@ conn = psycopg2.connect(
 
 
 @app.route('/')
-def hello_world():
-    return "Hello, World!"
+def web_service():
+    return "Web service em adamento!"
 
 
-@app.route('/livro', methods=['POST'])
-def cadastro_livro():
-    dic_livro = request.json
+# Cadastrar cliente
+@app.route('/clientes', methods=['POST'])
+def cadastro_cliente():
+    dic_cliente = request.json
     # Recuperando os dados do json que chegou via requisição 
-    titulo = dic_livro.get('titulo', "")
-    autor = dic_livro.get('autor', "")
-    ano_publicacao = dic_livro.get('ano_publicacao', "")
-    genero = dic_livro.get('genero', "")
+    nome = dic_cliente.get('nome', "")
+    email = dic_cliente.get('email', "")
+    cpf = dic_cliente.get('cpf', "")
+    senha = dic_cliente.get('senha', "")
 
     try:
         cur = conn.cursor()
-        cur.execute("INSERT INTO livros (titulo, autor, ano_publicacao, genero) VALUES (%s, %s, %s, %s)",
-                    (titulo, autor, ano_publicacao, genero))
+        cur.execute("INSERT INTO clientes (titulo, autor, ano_publicacao, genero) VALUES (%s, %s, %s, %s)",
+                    (nome, email, cpf, senha))
         conn.commit()
     except psycopg2.Error as e:
         conn.rollback()  # Reverte a transação atual
-        #Resposta de erro
+        # Resposta de erro
         return {"erro": str(e)}, 400
     finally:
         cur.close()
 
     # Resposta de sucesso
     resp = {
-        "mensagem": "Livro cadastrado",
-        "livro": dic_livro
+        "mensagem": "Cliente cadastrado",
+        "livro": dic_cliente
     }
 
     return resp, 201
 
 
-@app.route('/livro', methods=['GET'])
-def lista_livros():
-    genero = request.args.get('genero', '')
+# Listar clientes
+@app.route('/clientes', methods=['GET'])
+def lista_clientes():
+    # Recuperando parâmetros de filtro da url
+    nome = request.args.get('nome', '')
+    email = request.args.get('email', "")
+    cpf = request.args.get('cpf', "")
+    senha = request.args.get('senha', "")
+
     cur = conn.cursor()
 
     try:
-        if genero == '':
-            cur.execute("SELECT * FROM livros")
-            livros = cur.fetchall()
+        if nome:
+            cur.execute(f"SELECT * FROM clientes WHERE nome = '{nome}'")
+            clientes = cur.fetchall()
+        elif email:
+            cur.execute(f"SELECT * FROM clientes WHERE email = '{email}'")
+            clientes = cur.fetchall()
+        elif cpf:
+            cur.execute(f"SELECT * FROM clientes WHERE cpf = '{cpf}'")
+            clientes = cur.fetchall()
+        elif senha:
+            cur.execute(f"SELECT * FROM clientes WHERE senha = '{senha}'")
+            clientes = cur.fetchall()
         else:
-            cur.execute(f"SELECT * FROM livros WHERE genero = '{genero}'")
-            livros = cur.fetchall()
+            cur.execute("SELECT * FROM clientes")
+            clientes = cur.fetchall()
+            
             
     except psycopg2.Error as e:
         return {"erro": str(e)}, 500
     finally:
         cur.close()
 
-    livros_lista = []
-    for livro in livros:
-        livros_lista.append({
-            "id": livro[0],
-            "titulo": livro[1],
-            "autor": livro[2],
-            "ano_publicacao": livro[3],
-            "genero": livro[4]
+    clientes_lista = []
+    for cliente in clientes:
+        clientes_lista.append({
+            "id": cliente[0],
+            "nome": cliente[1],
+            "email": cliente[2],
+            "cpf": cliente[3],
+            "senha": cliente[4]
         })
 
-    return livros_lista, 200
+    return clientes_lista, 200
 
 
-@app.route('/livro/<int:id>', methods=['GET'])
-def lista_livro(id):
+# Informações do cliente
+@app.route('/clientes/<int:id>', methods=['GET'])
+def lista_cliente(id):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT * FROM livros WHERE id = {id}")
-        livros = cur.fetchall()
+        cur.execute(f"SELECT * FROM clientes WHERE id = {id}")
+        clientes = cur.fetchall()
     except psycopg2.Error as e:
         return {"erro": str(e)}, 500
     finally:
         cur.close()
 
-    if livros == []:
-        return {"erro": "Livro não encontrado"}, 404
+    if clientes == []:
+        return {"erro": "Cliente não encontrado"}, 404
     else:
-        dados_livro = []
-        for livro in livros:
-            dados_livro.append({
-                "id": livro[0],
-                "titulo": livro[1],
-                "autor": livro[2],
-                "ano_publicacao": livro[3],
-                "genero": livro[4]
+        dados_cliente = []
+        for cliente in clientes:
+            dados_cliente.append({
+                "id": cliente[0],
+                "nome": cliente[1],
+                "email": cliente[2],
+                "cpf": cliente[3],
+                "senha": cliente[4]
             })
 
-    return dados_livro, 200
+    return dados_cliente, 200
 
 
-@app.route('/livro/<int:id>', methods=['PUT'])
+# Atualizar cliente
+@app.route('/clientes/<int:id>', methods=['PUT'])
 def atualizar_livro(id):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT * FROM livros WHERE id = {id}")
-        livros = cur.fetchall()
+        cur.execute(f"SELECT * FROM clientes WHERE id = {id}")
+        clientes = cur.fetchall()
     except psycopg2.Error as e:
         return {"erro": str(e)}, 500
     else:
-        if livros == []:
-            return {"erro": "Livro não encontrado"}, 404
+        if clientes == []:
+            return {"erro": "Cliente não encontrado"}, 404
         else:
-            dic_livro = request.json
+            dic_cliente = request.json
             # Recuperando os dados do json que chegou via requisição 
-            titulo = dic_livro.get('titulo', "")
-            autor = dic_livro.get('autor', "")
-            ano_publicacao = dic_livro.get('ano_publicacao', "")
-            genero = dic_livro.get('genero', "")
+            nome = dic_cliente.get('nome', "")
+            email = dic_cliente.get('email', "")
+            cpf = dic_cliente.get('cpf', "")
+            senha = dic_cliente.get('senha', "")
 
             try:
-                if titulo:
-                    cur.execute(f"UPDATE livros SET titulo = '{titulo}' WHERE id = {id}")
+                if nome:
+                    cur.execute(f"UPDATE clientes SET nome = '{nome}' WHERE id = {id}")
                     conn.commit()
 
-                if autor:
-                    cur.execute(f"UPDATE livros SET autor = '{autor}' WHERE id = {id}")
+                if email:
+                    cur.execute(f"UPDATE clientes SET email = '{email}' WHERE id = {id}")
                     conn.commit()
 
-                if ano_publicacao:
-                    cur.execute(f"UPDATE livros SET ano_publicacao = '{ano_publicacao}' WHERE id = {id}")
+                if cpf:
+                    cur.execute(f"UPDATE clientes SET cpf = '{cpf}' WHERE id = {id}")
                     conn.commit()
 
-                if genero:
-                    cur.execute(f"UPDATE livros SET genero = '{genero}' WHERE id = {id}")
+                if senha:
+                    cur.execute(f"UPDATE clientes SET senha = '{senha}' WHERE id = {id}")
                     conn.commit()
 
             except psycopg2.Error as e:
                 conn.rollback()  # Reverte a transação atual
                 #Resposta de erro
-                return {"erro": str(e)}, 400
+                return {"Erro": str(e)}, 400
             finally:
                 cur.close()
 
             # Resposta de sucesso
             resp = {
-                "mensagem": "Livro atualizado",
+                "mensagem": "Cliente atualizado",
             }
 
     return resp, 200
 
 
-@app.route('/livro/<int:id>', methods=['DELETE'])
+# Deletar cliente
+@app.route('/clientes/<int:id>', methods=['DELETE'])
 def apagar_livro(id):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT * FROM livros WHERE id = {id}")
+        cur.execute(f"SELECT * FROM clientes WHERE id = {id}")
         livros = cur.fetchall()
     except psycopg2.Error as e:
         return {"erro": str(e)}, 500
     else:
         if livros == []:
-            return {"erro": "Livro não encontrado"}, 404
+            return {"erro": "Cliente não encontrado"}, 404
         else:
             try:
-                cur.execute(f"DELETE FROM livros WHERE id = {id}")
+                cur.execute(f"DELETE FROM clientes WHERE id = {id}")
                 conn.commit()
             except psycopg2.Error as e:
                 conn.rollback()  # Reverte a transação atual
@@ -183,7 +203,7 @@ def apagar_livro(id):
 
             # Resposta de sucesso
             resp = {
-                "mensagem": "Livro deletado",
+                "mensagem": "Cliente deletado",
             }
 
     return resp, 200
