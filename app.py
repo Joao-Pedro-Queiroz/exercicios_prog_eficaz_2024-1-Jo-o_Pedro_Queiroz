@@ -253,19 +253,19 @@ def lista_produtos():
     try:
         if nome:
             cur.execute(f"SELECT * FROM produtos WHERE nome = '{nome}'")
-            clientes = cur.fetchall()
+            produtos = cur.fetchall()
         elif descricao:
             cur.execute(f"SELECT * FROM produtos WHERE descricao = '{descricao}'")
-            clientes = cur.fetchall()
+            produtos = cur.fetchall()
         elif preco:
             cur.execute(f"SELECT * FROM produtos WHERE preco = {preco}")
-            clientes = cur.fetchall()
+            produtos = cur.fetchall()
         elif estoque:
             cur.execute(f"SELECT * FROM produtos WHERE senha = {estoque}")
-            clientes = cur.fetchall()
+            produtos = cur.fetchall()
         else:
             cur.execute("SELECT * FROM produtos")
-            clientes = cur.fetchall()
+            produtos = cur.fetchall()
             
             
     except psycopg2.Error as e:
@@ -274,13 +274,13 @@ def lista_produtos():
         cur.close()
 
     produtos_lista = []
-    for cliente in clientes:
+    for produto in produtos:
         produtos_lista.append({
-            "id": cliente[0],
-            "nome": cliente[1],
-            "descricao": cliente[2],
-            "preco": cliente[3],
-            "estoque": cliente[4]
+            "id": produto[0],
+            "nome": produto[1],
+            "descricao": produto[2],
+            "preco": produto[3],
+            "estoque": produto[4]
         })
 
     return produtos_lista, 200
@@ -303,19 +303,19 @@ def lista_produto(id):
         return {"erro": "Produto não encontrado"}, 404
     else:
         dados_produto = []
-        for cliente in clientes:
+        for produto in produtos:
             dados_produto.append({
-                "id": cliente[0],
-                "nome": cliente[1],
-                "descricao": cliente[2],
-                "preco": cliente[3],
-                "estoque": cliente[4]
+                "id": produto[0],
+                "nome": produto[1],
+                "descricao": produto[2],
+                "preco": produto[3],
+                "estoque": produto[4]
             })
 
     return dados_produto, 200
 
 
-# Atualizar cliente
+# Atualizar produto
 @app.route('/produtos/<int:id>', methods=['PUT'])
 def atualizar_produto(id):
     cur = conn.cursor()
@@ -356,7 +356,7 @@ def atualizar_produto(id):
             except psycopg2.Error as e:
                 conn.rollback()  # Reverte a transação atual
                 #Resposta de erro
-                return {"Erro": str(e)}, 400
+                return {"erro": str(e)}, 400
             finally:
                 cur.close()
 
@@ -368,7 +368,7 @@ def atualizar_produto(id):
     return resp, 200
 
 
-# Deletar cliente
+# Deletar produto
 @app.route('/produtos/<int:id>', methods=['DELETE'])
 def apagar_produto(id):
     cur = conn.cursor()
@@ -395,6 +395,185 @@ def apagar_produto(id):
             # Resposta de sucesso
             resp = {
                 "mensagem": "Produto deletado",
+            }
+
+    return resp, 200
+
+
+# Cadastrar fornecedor
+@app.route('/fornecedores', methods=['POST'])
+def cadastro_fornecedor():
+    dic_fornecedor = request.json
+    # Recuperando os dados do json que chegou via requisição 
+    nome = dic_fornecedor.get('nome', "")
+    email = dic_fornecedor.get('email', "")
+    cnpj = dic_fornecedor.get('cnpj', "")
+
+    try:
+        cur = conn.cursor()
+        cur.execute(f"INSERT INTO fornecedores (nome, descricao, preco, estoque) VALUES ('{nome}', '{email}', '{cnpj}')")
+        conn.commit()
+    except psycopg2.Error as e:
+        conn.rollback()  # Reverte a transação atual
+        # Resposta de erro
+        return {"erro": str(e)}, 400
+    finally:
+        cur.close()
+
+    # Resposta de sucesso
+    resp = {
+        "mensagem": "Fornecedor cadastrado",
+        "livro": dic_fornecedor
+    }
+
+    return resp, 201
+
+
+# Listar fornecedores
+@app.route('/fornecedores', methods=['GET'])
+def lista_fornecedores():
+    # Recuperando parâmetros de filtro da url
+    nome = request.args.get('nome', '')
+    email = request.args.get('email', "")
+    cnpj = request.args.get('cnpj', "")
+
+    cur = conn.cursor()
+
+    try:
+        if nome:
+            cur.execute(f"SELECT * FROM fornecedores WHERE nome = '{nome}'")
+            fornecedores = cur.fetchall()
+        elif email:
+            cur.execute(f"SELECT * FROM fornecedores WHERE descricao = '{email}'")
+            fornecedores = cur.fetchall()
+        elif cnpj:
+            cur.execute(f"SELECT * FROM fornecedores WHERE preco = '{cnpj}'")
+            fornecedores = cur.fetchall()
+        else:
+            cur.execute("SELECT * FROM fornecedores")
+            fornecedores = cur.fetchall()
+            
+            
+    except psycopg2.Error as e:
+        return {"erro": str(e)}, 500
+    finally:
+        cur.close()
+
+    fornecedores_lista = []
+    for fornecedor in fornecedores:
+        fornecedores_lista.append({
+            "id": fornecedor[0],
+            "nome": fornecedor[1],
+            "email": fornecedor[2],
+            "cnpj": fornecedor[3],
+        })
+
+    return fornecedores_lista, 200
+
+
+# Informações do fornecedor
+@app.route('/fornecedores/<int:id>', methods=['GET'])
+def lista_fornecedor(id):
+    cur = conn.cursor()
+
+    try:
+        cur.execute(f"SELECT * FROM fornecedores WHERE id = {id}")
+        fornecedores = cur.fetchall()
+    except psycopg2.Error as e:
+        return {"erro": str(e)}, 500
+    finally:
+        cur.close()
+
+    if fornecedores == []:
+        return {"erro": "Fornecedor não encontrado"}, 404
+    else:
+        dados_fornecedor = []
+        for fornecedor in fornecedores:
+            dados_fornecedor.append({
+                "id": fornecedor[0],
+                "nome": fornecedor[1],
+                "email": fornecedor[2],
+                "cnpj": fornecedor[3],
+            })
+
+    return dados_fornecedor, 200
+
+
+# Atualizar fornecedor
+@app.route('/fornecedores/<int:id>', methods=['PUT'])
+def atualizar_fornecedor(id):
+    cur = conn.cursor()
+
+    try:
+        cur.execute(f"SELECT * FROM fornecedores WHERE id = {id}")
+        fornecedores = cur.fetchall()
+    except psycopg2.Error as e:
+        return {"erro": str(e)}, 500
+    else:
+        if fornecedores == []:
+            return {"erro": "Fornecedor não encontrado"}, 404
+        else:
+            dic_fornecedor = request.json
+            # Recuperando os dados do json que chegou via requisição 
+            nome = dic_fornecedor.get('nome', "")
+            email = dic_fornecedor.get('email', "")
+            cnpj = dic_fornecedor.get('cnpj', "")
+
+            try:
+                if nome:
+                    cur.execute(f"UPDATE fornecedores SET nome = '{nome}' WHERE id = {id}")
+                    conn.commit()
+
+                if email:
+                    cur.execute(f"UPDATE fornecedores SET descricao = '{email}' WHERE id = {id}")
+                    conn.commit()
+
+                if cnpj:
+                    cur.execute(f"UPDATE fornecedores SET preco = '{cnpj}' WHERE id = {id}")
+                    conn.commit()
+
+            except psycopg2.Error as e:
+                conn.rollback()  # Reverte a transação atual
+                #Resposta de erro
+                return {"Erro": str(e)}, 400
+            finally:
+                cur.close()
+
+            # Resposta de sucesso
+            resp = {
+                "mensagem": "Fornecedor atualizado",
+            }
+
+    return resp, 200
+
+
+# Deletar fornecedor
+@app.route('/fornecedores/<int:id>', methods=['DELETE'])
+def apagar_fornecedor(id):
+    cur = conn.cursor()
+
+    try:
+        cur.execute(f"SELECT * FROM fornecedores WHERE id = {id}")
+        fornecedores = cur.fetchall()
+    except psycopg2.Error as e:
+        return {"erro": str(e)}, 500
+    else:
+        if fornecedores == []:
+            return {"erro": "Fornecedor não encontrado"}, 404
+        else:
+            try:
+                cur.execute(f"DELETE FROM fornecedores WHERE id = {id}")
+                conn.commit()
+            except psycopg2.Error as e:
+                conn.rollback()  # Reverte a transação atual
+                #Resposta de erro
+                return {"erro": str(e)}, 400
+            finally:
+                cur.close()
+
+            # Resposta de sucesso
+            resp = {
+                "mensagem": "Fornecedor deletado",
             }
 
     return resp, 200
