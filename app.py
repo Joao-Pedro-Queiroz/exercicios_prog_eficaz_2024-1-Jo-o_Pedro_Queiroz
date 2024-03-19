@@ -12,6 +12,7 @@ conn = psycopg2.connect(
 )
 
 
+# Caminho da raiz
 @app.route('/')
 def web_service():
     return "Web service em adamento!"
@@ -29,7 +30,7 @@ def cadastro_cliente():
 
     try:
         cur = conn.cursor()
-        cur.execute("INSERT INTO clientes (titulo, autor, ano_publicacao, genero) VALUES (%s, %s, %s, %s)",
+        cur.execute("INSERT INTO clientes (nome, email, cpf, senha) VALUES (%s, %s, %s, %s)",
                     (nome, email, cpf, senha))
         conn.commit()
     except psycopg2.Error as e:
@@ -42,7 +43,7 @@ def cadastro_cliente():
     # Resposta de sucesso
     resp = {
         "mensagem": "Cliente cadastrado",
-        "livro": dic_cliente
+        "cliente": dic_cliente
     }
 
     return resp, 201
@@ -184,11 +185,11 @@ def apagar_livro(id):
 
     try:
         cur.execute(f"SELECT * FROM clientes WHERE id = {id}")
-        livros = cur.fetchall()
+        clientes = cur.fetchall()
     except psycopg2.Error as e:
         return {"erro": str(e)}, 500
     else:
-        if livros == []:
+        if clientes == []:
             return {"erro": "Cliente não encontrado"}, 404
         else:
             try:
@@ -209,147 +210,182 @@ def apagar_livro(id):
     return resp, 200
 
 
-@app.route('/usuario', methods=['POST'])
-def cadastro_usuario():
-    dic_usuario = request.json
+# Cadastrar produto
+@app.route('/produtos', methods=['POST'])
+def cadastro_cliente():
+    dic_produto = request.json
     # Recuperando os dados do json que chegou via requisição 
-    nome = dic_usuario.get('nome', "")
-    email = dic_usuario.get('email', "")
-    data_cadastro = dic_usuario.get('data_cadastro', "")
+    nome = dic_produto.get('nome', "")
+    descricao = dic_produto.get('descricao', "")
+    preco = dic_produto.get('preco', "")
+    estoque = dic_produto.get('estoque', "")
 
     try:
         cur = conn.cursor()
-        cur.execute("INSERT INTO usuarios (nome, email, data_cadastro) VALUES (%s, %s, %s)",
-                    (nome, email, data_cadastro))
+        cur.execute("INSERT INTO produtos (nome, descricao, preco, estoque) VALUES (%s, %s, %s, %s)",
+                    (nome, descricao, preco, estoque))
         conn.commit()
     except psycopg2.Error as e:
         conn.rollback()  # Reverte a transação atual
-        #Resposta de erro
+        # Resposta de erro
         return {"erro": str(e)}, 400
     finally:
         cur.close()
 
     # Resposta de sucesso
     resp = {
-        "mensagem": "Usuario cadastrado",
-        "usuário": dic_usuario
+        "mensagem": "Produto cadastrado",
+        "livro": dic_produto
     }
+
     return resp, 201
 
 
-@app.route('/usuario', methods=['GET'])
-def lista_usuarios():
+# Listar produtos
+@app.route('/produtos', methods=['GET'])
+def lista_clientes():
+    # Recuperando parâmetros de filtro da url
+    nome = request.args.get('nome', '')
+    descricao = request.args.get('descricao', "")
+    preco = request.args.get('preco', "")
+    estoque = request.args.get('estoque', "")
+
     cur = conn.cursor()
 
     try:
-        cur.execute("SELECT * FROM usuarios")
-        usuarios = cur.fetchall()
+        if nome:
+            cur.execute(f"SELECT * FROM produtos WHERE nome = '{nome}'")
+            clientes = cur.fetchall()
+        elif descricao:
+            cur.execute(f"SELECT * FROM produtos WHERE descricao = '{descricao}'")
+            clientes = cur.fetchall()
+        elif preco:
+            cur.execute(f"SELECT * FROM produtos WHERE preco = {preco}")
+            clientes = cur.fetchall()
+        elif estoque:
+            cur.execute(f"SELECT * FROM produtos WHERE senha = {estoque}")
+            clientes = cur.fetchall()
+        else:
+            cur.execute("SELECT * FROM produtos")
+            clientes = cur.fetchall()
+            
+            
     except psycopg2.Error as e:
         return {"erro": str(e)}, 500
     finally:
         cur.close()
 
-    usuarios_lista = []
-    for usuario in usuarios:
-        usuarios_lista.append({
-            "id": usuario[0],
-            "nome": usuario[1],
-            "email": usuario[2],
-            "data_cadastro": usuario[3],
+    produtos_lista = []
+    for cliente in clientes:
+        produtos_lista.append({
+            "id": cliente[0],
+            "nome": cliente[1],
+            "descricao": cliente[2],
+            "preco": cliente[3],
+            "estoque": cliente[4]
         })
 
-    return usuarios_lista, 200
+    return produtos_lista, 200
 
 
-@app.route('/usuario/<int:id>', methods=['GET'])
-def lista_usuario(id):
+# Informações do produto
+@app.route('/produtos/<int:id>', methods=['GET'])
+def lista_cliente(id):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT * FROM usuarios WHERE id = {id}")
-        usuarios = cur.fetchall()
+        cur.execute(f"SELECT * FROM produtos WHERE id = {id}")
+        produtos = cur.fetchall()
     except psycopg2.Error as e:
         return {"erro": str(e)}, 500
     finally:
         cur.close()
 
-    if usuarios == []:
-        return {"erro": "Usuário não encontrado"}, 404
+    if produtos == []:
+        return {"erro": "Produto não encontrado"}, 404
     else:
-        dados_usuario = []
-        for usuario in usuarios:
-            dados_usuario.append({
-                "id": usuario[0],
-                "nome": usuario[1],
-                "email": usuario[2],
-                "data_cadastro": usuario[3],
+        dados_produto = []
+        for cliente in clientes:
+            dados_produto.append({
+                "id": cliente[0],
+                "nome": cliente[1],
+                "descricao": cliente[2],
+                "preco": cliente[3],
+                "estoque": cliente[4]
             })
 
-    return dados_usuario, 200
+    return dados_produto, 200
 
 
-@app.route('/usuario/<int:id>', methods=['PUT'])
-def atualizar_usuario(id):
+# Atualizar cliente
+@app.route('/produtos/<int:id>', methods=['PUT'])
+def atualizar_livro(id):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT * FROM usuarios WHERE id = {id}")
-        usuarios = cur.fetchall()
+        cur.execute(f"SELECT * FROM produtos WHERE id = {id}")
+        produtos = cur.fetchall()
     except psycopg2.Error as e:
         return {"erro": str(e)}, 500
     else:
-        if usuarios == []:
-            return {"erro": "Usuário não encontrado"}, 404
+        if produtos == []:
+            return {"erro": "Produto não encontrado"}, 404
         else:
-            dic_usuario = request.json
+            dic_produto = request.json
             # Recuperando os dados do json que chegou via requisição 
-            nome = dic_usuario.get('nome', "")
-            email = dic_usuario.get('email', "")
-            data_cadastro = dic_usuario.get('data_cadastro', "")
+            nome = dic_produto.get('nome', "")
+            descricao = dic_produto.get('descricao', "")
+            preco = dic_produto.get('preco', "")
+            estoque = dic_produto.get('estoque', "")
 
             try:
                 if nome:
-                    cur.execute(f"UPDATE usuarios SET nome = '{nome}' WHERE id = {id}")
+                    cur.execute(f"UPDATE produtos SET nome = '{nome}' WHERE id = {id}")
                     conn.commit()
 
-                if email:
-                    cur.execute(f"UPDATE usuarios SET email = '{email}' WHERE id = {id}")
+                if descricao:
+                    cur.execute(f"UPDATE produtos SET descricao = '{descricao}' WHERE id = {id}")
                     conn.commit()
 
-                if data_cadastro:
-                    cur.execute(f"UPDATE usuarios SET data_cadastro = '{data_cadastro}' WHERE id = {id}")
+                if preco:
+                    cur.execute(f"UPDATE produtos SET preco = {preco} WHERE id = {id}")
+                    conn.commit()
+
+                if estoque:
+                    cur.execute(f"UPDATE produtos SET estoque = {estoque} WHERE id = {id}")
                     conn.commit()
 
             except psycopg2.Error as e:
                 conn.rollback()  # Reverte a transação atual
                 #Resposta de erro
-                return {"erro": str(e)}, 400
+                return {"Erro": str(e)}, 400
             finally:
                 cur.close()
 
             # Resposta de sucesso
             resp = {
-                "mensagem": "Usuário atualizado",
+                "mensagem": "Produto atualizado",
             }
 
     return resp, 200
 
 
-@app.route('/usuario/<int:id>', methods=['DELETE'])
-def apagar_usuario(id):
+# Deletar cliente
+@app.route('/produtos/<int:id>', methods=['DELETE'])
+def apagar_livro(id):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT * FROM usuarios WHERE id = {id}")
-        usuarios = cur.fetchall()
+        cur.execute(f"SELECT * FROM produtos WHERE id = {id}")
+        produtos = cur.fetchall()
     except psycopg2.Error as e:
         return {"erro": str(e)}, 500
     else:
-        if usuarios == []:
-            return {"erro": "Usuário não encontrado"}, 404
+        if produtos == []:
+            return {"erro": "Produto não encontrado"}, 404
         else:
             try:
-                cur.execute(f"DELETE FROM usuarios WHERE id = {id}")
+                cur.execute(f"DELETE FROM produtos WHERE id = {id}")
                 conn.commit()
             except psycopg2.Error as e:
                 conn.rollback()  # Reverte a transação atual
@@ -360,8 +396,9 @@ def apagar_usuario(id):
 
             # Resposta de sucesso
             resp = {
-                "mensagem": "Usuário deletado",
+                "mensagem": "Produto deletado",
             }
+
     return resp, 200
 
 
