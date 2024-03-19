@@ -30,8 +30,7 @@ def cadastro_cliente():
 
     try:
         cur = conn.cursor()
-        cur.execute("INSERT INTO clientes (nome, email, cpf, senha) VALUES (%s, %s, %s, %s)",
-                    (nome, email, cpf, senha))
+        cur.execute(f"INSERT INTO clientes (nome, email, cpf, senha) VALUES ('{nome}', '{email}', '{cpf}', '{senha}')")
         conn.commit()
     except psycopg2.Error as e:
         conn.rollback()  # Reverte a transação atual
@@ -222,8 +221,7 @@ def cadastro_cliente():
 
     try:
         cur = conn.cursor()
-        cur.execute("INSERT INTO produtos (nome, descricao, preco, estoque) VALUES (%s, %s, %s, %s)",
-                    (nome, descricao, preco, estoque))
+        cur.execute(f"INSERT INTO produtos (nome, descricao, preco, estoque) VALUES ('{nome}', '{descricao}', {preco}, {estoque})")
         conn.commit()
     except psycopg2.Error as e:
         conn.rollback()  # Reverte a transação atual
