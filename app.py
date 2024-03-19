@@ -126,7 +126,7 @@ def lista_cliente(id):
 
 # Atualizar cliente
 @app.route('/clientes/<int:id>', methods=['PUT'])
-def atualizar_livro(id):
+def atualizar_cliente(id):
     cur = conn.cursor()
 
     try:
@@ -179,7 +179,7 @@ def atualizar_livro(id):
 
 # Deletar cliente
 @app.route('/clientes/<int:id>', methods=['DELETE'])
-def apagar_livro(id):
+def apagar_cliente(id):
     cur = conn.cursor()
 
     try:
@@ -211,7 +211,7 @@ def apagar_livro(id):
 
 # Cadastrar produto
 @app.route('/produtos', methods=['POST'])
-def cadastro_cliente():
+def cadastro_produto():
     dic_produto = request.json
     # Recuperando os dados do json que chegou via requisição 
     nome = dic_produto.get('nome', "")
@@ -241,7 +241,7 @@ def cadastro_cliente():
 
 # Listar produtos
 @app.route('/produtos', methods=['GET'])
-def lista_clientes():
+def lista_produtos():
     # Recuperando parâmetros de filtro da url
     nome = request.args.get('nome', '')
     descricao = request.args.get('descricao', "")
@@ -288,7 +288,7 @@ def lista_clientes():
 
 # Informações do produto
 @app.route('/produtos/<int:id>', methods=['GET'])
-def lista_cliente(id):
+def lista_produto(id):
     cur = conn.cursor()
 
     try:
@@ -317,7 +317,7 @@ def lista_cliente(id):
 
 # Atualizar cliente
 @app.route('/produtos/<int:id>', methods=['PUT'])
-def atualizar_livro(id):
+def atualizar_produto(id):
     cur = conn.cursor()
 
     try:
@@ -370,7 +370,7 @@ def atualizar_livro(id):
 
 # Deletar cliente
 @app.route('/produtos/<int:id>', methods=['DELETE'])
-def apagar_livro(id):
+def apagar_produto(id):
     cur = conn.cursor()
 
     try:
