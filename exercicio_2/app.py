@@ -70,7 +70,7 @@ def cadastrar_pedidos(nome_cliente):
 
 
 @app.route('/pedidos/<string:data_hora>', methods=['DELETE'])
-def deletar_emprestimo(data_hora):
+def deletar_pedido(data_hora):
     try:
         filtro = {"data_hora": data_hora}
         dados_emprestimo = list(mongo.db.pedidos_exemplo.find(filtro))
