@@ -57,7 +57,7 @@ def cadastrar_pedidos(nome_cliente):
     }
 
     try:
-        if "pedidos" in mongo.db.clientes_exemplo.find_one():
+        if "pedidos" in mongo.db.clientes_exemplo.find_one({"nome": nome_cliente}):
             mongo.db.clientes_exemplo.update_one({"nome": nome_cliente}, {"$push": {"pedidos": novo_emprestimo}})
         else:
             mongo.db.clientes_exemplo.update_one({"nome": nome_cliente}, {"$addToSet": {"pedidos": novo_emprestimo}})
