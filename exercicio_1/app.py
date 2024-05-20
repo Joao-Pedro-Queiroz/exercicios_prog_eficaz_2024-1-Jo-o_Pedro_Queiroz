@@ -1,16 +1,16 @@
 from flask import Flask, request
 import psycopg2
 import json
+import os
 
 app = Flask("nome_da_minha_aplicacao")
 
 conn = psycopg2.connect(
-    dbname="dwdcnoty",
-    user="dwdcnoty",
-    password="OcTpYT7PvUGbihzCP2gPuHGbyUVDdOqV",
+    dbname= os.getenv("user/db_postegreSQL"),
+    user= os.getenv("user/db_postegreSQL"),
+    password= os.getenv("password_postegreSQL"),
     host="silly.db.elephantsql.com"
 )
-
 
 # Caminho da raiz
 @app.route('/')
